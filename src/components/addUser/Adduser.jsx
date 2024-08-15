@@ -15,35 +15,48 @@ import {
 import { db } from "../../lib/firebse";
 import { useUserStore } from "../../lib/userStore";
 
-
-export default function Adduser() {
-
+export default function AddUser() {
   const [user, setUser] = useState(null);
+  const [message, setMessage] = useState("");
   const { currentUser } = useUserStore();
-
 
   const handleSearch = async (e) => {
     e.preventDefault();
+    setMessage(""); // Clear previous messages
     const formData = new FormData(e.target);
     const username = formData.get("username");
     try {
       const userRef = collection(db, "users");
       const q = query(userRef, where("username", "==", username));
       const querySnapShot = await getDocs(q);
-      console.log(querySnapShot);
       if (!querySnapShot.empty) {
         setUser(querySnapShot.docs[0].data());
-        console.log("query", querySnapShot.docs[0].data());
+      } else {
+        setMessage("User not found");
       }
     } catch (err) {
       console.log(err);
+      setMessage("An error occurred while searching for the user.");
     }
   };
+
   const handleAdd = async () => {
     const chatRef = collection(db, "chats");
     const userChatsRef = collection(db, "userchats");
 
     try {
+      // Check if chat already exists
+      const userChatsDoc = await getDoc(doc(userChatsRef, currentUser.id));
+      const userChats = userChatsDoc.data()?.chats || [];
+      const chatExists = userChats.some(
+        (chat) => chat.receiverId === user.id
+      );
+
+      if (chatExists) {
+        setMessage("User already added.");
+        return;
+      }
+
       const newChatRef = doc(chatRef);
       await setDoc(newChatRef, {
         createdAt: serverTimestamp(),
@@ -54,8 +67,8 @@ export default function Adduser() {
         chats: arrayUnion({
           chatId: newChatRef.id,
           lastMessage: "",
-          revceiverId: currentUser.id,
-          updatedAt:Date.now(),
+          receiverId: currentUser.id,
+          updatedAt: Date.now(),
         }),
       });
 
@@ -63,18 +76,18 @@ export default function Adduser() {
         chats: arrayUnion({
           chatId: newChatRef.id,
           lastMessage: "",
-          revceiverId: user.id,
-          updatedAt:Date.now(),
+          receiverId: user.id,
+          updatedAt: Date.now(),
         }),
       });
 
-      console.log(newChatRef.id);
+      setMessage("User added successfully.");
     } catch (err) {
       console.log(err);
+      setMessage("An error occurred while adding the user.");
     }
-
-   
   };
+
   return (
     <div className="addUser">
       <form onSubmit={handleSearch}>
@@ -82,10 +95,12 @@ export default function Adduser() {
         <button>Search</button>
       </form>
 
+      {message && <p className="message" style={{color:"white",paddingTop:"20px"}}>{message}</p>}
+
       {user && (
         <div className="user">
           <div className="detail">
-            <img src={user.avatar || "./avatar.png "} alt="" />
+            <img src={user.avatar || "./avatar.png"} alt="" />
             <span>{user.username}</span>
           </div>
           <button onClick={handleAdd}>Add User</button>

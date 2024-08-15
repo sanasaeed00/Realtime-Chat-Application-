@@ -89,7 +89,11 @@ export default function Chat() {
       const userIDs = [currentUser.id, user.id];
       userIDs.forEach(async (id) => {
         const userChatsRef = doc(db, "userchats", id);
+        console.log("userChatRef",userChatsRef)
         const userChatsSnapshot = await getDoc(userChatsRef);
+        console.log("userChatsSnapsjot",userChatsSnapshot)
+
+
 
         if (userChatsSnapshot.exists()) {
           const userChatsData = userChatsSnapshot.data();

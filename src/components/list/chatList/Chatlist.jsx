@@ -8,6 +8,7 @@ import { useChatStore } from "../../../lib/chatStore";
 export default function Chatlist() {
   const [chats, setChats] = useState([]);
   const [addMode, setAddMode] = useState(false);
+  
   const [input, setInput] = useState("");
 
   const { currentUser } = useUserStore();
@@ -15,16 +16,18 @@ export default function Chatlist() {
   console.log("id", chatId);
 
   useEffect(() => {
-    const unsub = onSnapshot(
+    const unSub = onSnapshot(
       doc(db, "userchats", currentUser.id),
       async (res) => {
-        console.log("res", res.data());
+        
         const items = res.data().chats;
-        console.log("Items", items);
+        console.log("items",items)
         const promises = items.map(async (item) => {
-          const userDocRef = doc(db, "users", item.revceiverId);
+          const userDocRef = doc(db, "users", item.receiverId);
           const userDocSnap = await getDoc(userDocRef);
+
           const user = userDocSnap.data();
+          console.log("user",user)
           return { ...item, user };
         });
 
@@ -33,10 +36,10 @@ export default function Chatlist() {
       }
     );
     return () => {
-      unsub();
+      unSub();
     };
   }, [currentUser.id]);
-  console.log("chats", chats);
+  
 
   const handleSelect = async (chat) => {
     const userChats = chats.map((item) => {
@@ -82,7 +85,7 @@ export default function Chatlist() {
           onClick={() => setAddMode((prev) => !prev)}
         />
       </div>
-
+      
       {filteredChats.map((chat) => {
         return (
           <div

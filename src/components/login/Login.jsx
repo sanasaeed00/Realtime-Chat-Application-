@@ -28,6 +28,7 @@ export default function Login() {
    const { email, password } = Object.fromEntries(formData);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      toast.success("Account Created, You can login now!");
     }catch (err) {
         console.log(err);
         toast.error(err.message);
@@ -73,7 +74,7 @@ export default function Login() {
         <form onSubmit={handleLogin}>
           <input type="text" placeholder="Email" name="email" />
           <input type="password" placeholder="Password" name="password" />
-          <button disabled={loading}>Sign In</button>
+          <button disabled={loading}>{loading ? "Loading" :"Sign In"}</button>
         </form>
       </div>
       <div className="separator"></div>
